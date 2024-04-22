@@ -10,8 +10,51 @@ public class ShapeEditor : Editor
 
     ShapeCreator shapeCreator;
     SelectionInfo selectionInfo;
-    bool needsRepaint;
+    bool shapeChangedSinceLastRepaint;
 
+    public override void OnInspectorGUI()
+    {
+        base.OnInspectorGUI();
+        string helpMessage = "Left click to add points.\nShift-left click on point to delete.\nShift-left click on empty space to create new shape.";
+        EditorGUILayout.HelpBox(helpMessage, MessageType.Info);
+
+        int shapeDeleteIndex = -1;
+        shapeCreator.showShapesList = EditorGUILayout.Foldout(shapeCreator.showShapesList, "Show Shapes List");
+        if (shapeCreator.showShapesList)
+        {
+            for (int i = 0; i < shapeCreator.shapes.Count; i++)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Shape " + (i + 1));
+
+                GUI.enabled = i != selectionInfo.selectedShapeIndex;
+                if (GUILayout.Button("Select"))
+                {
+                    selectionInfo.selectedShapeIndex = i;
+                }
+                GUI.enabled = true;
+
+                if (GUILayout.Button("Delete"))
+                {
+                    shapeDeleteIndex = i;
+                }
+                GUILayout.EndHorizontal();
+            }
+        }
+
+        if (shapeDeleteIndex != -1)
+        {
+            Undo.RecordObject(shapeCreator, "Delete shape");
+            shapeCreator.shapes.RemoveAt(shapeDeleteIndex);
+            selectionInfo.selectedShapeIndex = Mathf.Clamp(selectionInfo.selectedShapeIndex, 0, shapeCreator.shapes.Count - 1);
+        }
+
+        if (GUI.changed)
+        {
+            shapeChangedSinceLastRepaint = true;
+            SceneView.RepaintAll();
+        }
+    }
 
     void OnSceneGUI()
     {
@@ -28,7 +71,7 @@ public class ShapeEditor : Editor
         else
         {
             HandleInput(guiEvent);
-            if (needsRepaint)
+            if (shapeChangedSinceLastRepaint)
             {
                 HandleUtility.Repaint();
             }
@@ -50,9 +93,18 @@ public class ShapeEditor : Editor
         SelectedShape.points.Insert(newPointIndex, position);
         selectionInfo.pointIndex = newPointIndex;
         selectionInfo.mouseOverShapeIndex = selectionInfo.selectedShapeIndex;
-        needsRepaint = true;
+        shapeChangedSinceLastRepaint = true;
 
         SelectPointUnderMouse();
+    }
+
+    void DeletePointUnderMouse()
+    {
+        Undo.RecordObject(shapeCreator, "Delete point");
+        SelectedShape.points.RemoveAt(selectionInfo.pointIndex);
+        selectionInfo.pointIsSelected = false;
+        selectionInfo.mouseIsOverPoint = false;
+        shapeChangedSinceLastRepaint = true;
     }
 
     void SelectPointUnderMouse()
@@ -63,7 +115,7 @@ public class ShapeEditor : Editor
         selectionInfo.lineIndex = -1;
 
         selectionInfo.positionAtStartOfDrag = SelectedShape.points[selectionInfo.pointIndex];
-        needsRepaint = true;
+        shapeChangedSinceLastRepaint = true;
     }
 
     void SelectShapeUnderMouse()
@@ -71,7 +123,7 @@ public class ShapeEditor : Editor
         if (selectionInfo.mouseOverShapeIndex != -1)
         {
             selectionInfo.selectedShapeIndex = selectionInfo.mouseOverShapeIndex;
-            needsRepaint = true;
+            shapeChangedSinceLastRepaint = true;
         }
     }
 
@@ -111,8 +163,16 @@ public class ShapeEditor : Editor
 
     void HandleShiftLeftMouseDown(Vector3 mousePosition)
     {
-        CreateNewShape();
-        CreateNewPoint(mousePosition);
+        if (selectionInfo.mouseIsOverPoint)
+        {
+            SelectShapeUnderMouse();
+            DeletePointUnderMouse();
+        }
+        else
+        {
+            CreateNewShape();
+            CreateNewPoint(mousePosition);
+        }
     }
 
     void HandleLeftMouseDown(Vector3 mousePosition)
@@ -144,7 +204,7 @@ public class ShapeEditor : Editor
 
             selectionInfo.pointIsSelected = false;
             selectionInfo.pointIndex = -1;
-            needsRepaint = true;
+            shapeChangedSinceLastRepaint = true;
         }
 
     }
@@ -154,7 +214,7 @@ public class ShapeEditor : Editor
         if (selectionInfo.pointIsSelected)
         {
             SelectedShape.points[selectionInfo.pointIndex] = mousePosition;
-            needsRepaint = true;
+            shapeChangedSinceLastRepaint = true;
         }
 
     }
@@ -184,7 +244,7 @@ public class ShapeEditor : Editor
             selectionInfo.pointIndex = mouseOverPointIndex;
             selectionInfo.mouseIsOverPoint = mouseOverPointIndex != -1;
 
-            needsRepaint = true;
+            shapeChangedSinceLastRepaint = true;
         }
 
         if (selectionInfo.mouseIsOverPoint)
@@ -218,7 +278,7 @@ public class ShapeEditor : Editor
                 selectionInfo.mouseOverShapeIndex = mouseOverShapeIndex;
                 selectionInfo.lineIndex = mouseOverLineIndex;
                 selectionInfo.mouseIsOverLine = mouseOverLineIndex != -1;
-                needsRepaint = true;
+                shapeChangedSinceLastRepaint = true;
             }
         }
     }
@@ -258,27 +318,36 @@ public class ShapeEditor : Editor
             }
         }
 
-        needsRepaint = false;
+        if (shapeChangedSinceLastRepaint)
+        {
+            shapeCreator.UpdateMeshDisplay();
+        }
+
+        shapeChangedSinceLastRepaint = false;
     }
 
     void OnEnable()
     {
+        shapeChangedSinceLastRepaint = true;
         shapeCreator = target as ShapeCreator;
         selectionInfo = new SelectionInfo();
         Undo.undoRedoPerformed += OnUndoOrRedo;
+        Tools.hidden = true;
     }
 
     void OnDisable()
     {
         Undo.undoRedoPerformed -= OnUndoOrRedo;
+        Tools.hidden = false;
     }
 
     void OnUndoOrRedo()
     {
-        if (selectionInfo.selectedShapeIndex >= shapeCreator.shapes.Count)
+        if (selectionInfo.selectedShapeIndex >= shapeCreator.shapes.Count || selectionInfo.selectedShapeIndex == -1)
         {
             selectionInfo.selectedShapeIndex = shapeCreator.shapes.Count - 1;
         }
+        shapeChangedSinceLastRepaint = true;
     }
 
     Shape SelectedShape
@@ -304,7 +373,3 @@ public class ShapeEditor : Editor
     }
 
 }
-
-
-
-

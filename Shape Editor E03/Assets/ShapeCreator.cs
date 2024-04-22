@@ -15,6 +15,10 @@ public class ShapeCreator : MonoBehaviour
     public float handleRadius = .5f;
 
 
+   
+    [SerializeField] public bool showShapesList;
+
+
 
     public void UpdateMeshDisplay()
     {
