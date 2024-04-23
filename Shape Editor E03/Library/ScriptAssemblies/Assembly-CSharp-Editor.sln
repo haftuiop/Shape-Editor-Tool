@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.810.25
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB9-8B4A-11D0-8D11-00A0C91BC942}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.dll", "{75D8F5CA-4E72-4952-AD9B-663CB673D290}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Default|Any CPU = Default|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{75D8F5CA-4E72-4952-AD9B-663CB673D290}.Default|Any CPU.ActiveCfg = Default|Any CPU
+		{75D8F5CA-4E72-4952-AD9B-663CB673D290}.Default|Any CPU.Build.0 = Default|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72C39DAE-A557-4B94-A7EC-FE2B15C554E2}
+	EndGlobalSection
+EndGlobal
