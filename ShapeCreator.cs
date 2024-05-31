@@ -12,11 +12,6 @@ public class ShapeCreator : MonoBehaviour
     
     public List<Sebastian.Geometry.Shape> shapes = new List<Sebastian.Geometry.Shape>();
 
-    public float handleRadius = .5f;
-
-
-   
-    [SerializeField] public bool showShapesList;
 
 
 
@@ -28,7 +23,7 @@ public class ShapeCreator : MonoBehaviour
 
 
 
-    public Mesh createMesh(IEnumerable<Vector3> _verts)
+    public static Mesh createMesh(IEnumerable<Vector3> _verts)
     {
 
         ShapeCreator new_ShapeCreator = new GameObject().AddComponent<ShapeCreator>();
@@ -46,6 +41,17 @@ public class ShapeCreator : MonoBehaviour
         return new_ShapeCreator.my_MeshFilter.mesh;
 
     }
+
+
+#if UNITY_EDITOR
+
+    private void OnValidate()
+    {
+        UpdateMeshDisplay();
+    }
+
+
+#endif
 
 
 }
