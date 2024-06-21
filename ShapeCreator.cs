@@ -27,90 +27,91 @@ public class ShapeCreator : MonoBehaviour
     public static Mesh createMesh(IEnumerable<Vector3> _verts,bool _3d = false)
     {
 
-        ShapeCreator new_ShapeCreator = new GameObject().AddComponent<ShapeCreator>();
+        List<Shape> _shapes = new List<Shape>();
 
-        new_ShapeCreator.shapes.Add(new Sebastian.Geometry.Shape());
-
-
+        _shapes.Add(new Sebastian.Geometry.Shape());
 
 
-        new_ShapeCreator.shapes[0].points = new List<Vector3>(_verts);
+        _shapes[0].points = new List<Vector3>(_verts);
 
-        new_ShapeCreator.UpdateMeshDisplay();
+        CompositeShape _CompositeShape = new CompositeShape(_shapes);
 
-        if(_3d == true)
+
+        Mesh _Mesh = _CompositeShape.GetMesh();
+
+        if (_3d == false)
+            return _Mesh;
+
+
+        //handle 3d case...
+
+        
+        List<Vector3> _points = new List<Vector3>(_Mesh.vertices);
+        List<int> _triangles = new List<int>(_Mesh.triangles);
+
+
+
+        int _n_points = _points.Count;
+
+
+        List<int> _bottom_face_triangles = new List<int>(_Mesh.triangles.Select(x => x + _n_points)).ToList();
+
+        _bottom_face_triangles.Reverse();
+
+
+
+        _points.AddRange(_points);
+
+        //ok now we must stich together the sides...
+        for(int i = 0; i < _n_points - 1; i += 1)
         {
+            //triangles
+            _triangles.Add(i);
+            _triangles.Add(i + 1);
+            _triangles.Add(i + _n_points);
 
-            List<Vector3> _points = new List<Vector3>(new_ShapeCreator.my_MeshFilter.mesh.vertices);
-            List<int> _triangles = new List<int>(new_ShapeCreator.my_MeshFilter.mesh.triangles);
-
-
-
-            int _n_points = _points.Count;
-
-
-            List<int> _bottom_face_triangles = new List<int>(new_ShapeCreator.my_MeshFilter.mesh.triangles.Select(x => x + _n_points)).ToList(); ;
-
-            _bottom_face_triangles.Reverse();
-
-
-
-            _points.AddRange(_points);
-
-            //ok now we must stich together the sides...
-            for(int i = 0; i < _n_points - 1; i += 1)
-            {
-                //triangles
-                _triangles.Add(i);
-                _triangles.Add(i + 1);
-                _triangles.Add(i + _n_points);
-
-                _triangles.Add(i + 1);
-                _triangles.Add(i + _n_points + 1);
-                _triangles.Add(i + _n_points);
-            }
-
-            _triangles.Add(_n_points - 1);
-            _triangles.Add(0);
-            _triangles.Add(_n_points * 2 - 1);
-
-            _triangles.Add(0);
-            _triangles.Add(_n_points);
-            _triangles.Add(_n_points * 2 - 1);
-
-
-            _triangles.AddRange(_bottom_face_triangles);
-
-
-
-
-            new_ShapeCreator.my_MeshFilter.mesh.vertices = _points.ToArray();
-            new_ShapeCreator.my_MeshFilter.mesh.triangles = _triangles.ToArray();
-            new_ShapeCreator.my_MeshFilter.mesh.RecalculateNormals();
-
-            List<Vector3> _normals = new List<Vector3>();
-
-            for (int i = 0; i < _n_points; i += 1)
-            {
-                _normals.Add(new Vector3(0, 1, 0));
-            }
-
-            for (int i = 0; i < _n_points; i += 1)
-            {
-                _normals.Add(new Vector3(0, 0, -1));
-            }
-
-            new_ShapeCreator.my_MeshFilter.mesh.normals = _normals.ToArray();
-
-
-
-
-
+            _triangles.Add(i + 1);
+            _triangles.Add(i + _n_points + 1);
+            _triangles.Add(i + _n_points);
         }
 
-        Mesh _Mesh = new_ShapeCreator.my_MeshFilter.mesh;
+        _triangles.Add(_n_points - 1);
+        _triangles.Add(0);
+        _triangles.Add(_n_points * 2 - 1);
 
-        Destroy(new_ShapeCreator.gameObject);
+        _triangles.Add(0);
+        _triangles.Add(_n_points);
+        _triangles.Add(_n_points * 2 - 1);
+
+
+        _triangles.AddRange(_bottom_face_triangles);
+
+
+
+
+        _Mesh.vertices = _points.ToArray();
+        _Mesh.triangles = _triangles.ToArray();
+        _Mesh.RecalculateNormals();
+
+        List<Vector3> _normals = new List<Vector3>();
+
+        for (int i = 0; i < _n_points; i += 1)
+        {
+            _normals.Add(new Vector3(0, 1, 0));
+        }
+
+        for (int i = 0; i < _n_points; i += 1)
+        {
+            _normals.Add(new Vector3(0, 0, -1));
+        }
+
+        _Mesh.normals = _normals.ToArray();
+
+
+
+
+
+        
 
         return _Mesh;
 
