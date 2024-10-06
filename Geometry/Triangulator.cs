@@ -69,7 +69,9 @@ namespace Sebastian.Geometry
 
                 if (!hasRemovedEarThisIteration)
                 {
+#if UNITY_EDITOR
                     Debug.LogError("Error triangulating mesh. Aborted.");
+#endif
                     return null;
                 }
             }
